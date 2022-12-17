@@ -8,14 +8,14 @@ from xmlrpc.server import SimpleXMLRPCRequestHandler
 import xmlrpc.client
 
 
-# from telebot import apihelper
-# apihelper.proxy = {'http':'http://127.0.0.1:3128'}
-# apihelper.API_URL = "http://46.181.26.73/bot{0}/{1}"
+from telebot import apihelper
+apihelper.proxy = {'http':'http://proxy.azot.kmr:3128'}
+apihelper.API_URL = "http://46.181.26.73/bot{0}/{1}"
 
 api_token = '5820420595:AAEkPAGtRi-GED2eh4uPoSv8mCzkwaY1_Ks'
 chat_id   = '318983573'
-host_orion={'ip':'192.168.0.2', 'port':'8080'}
-host_xml_server={'ip':'192.168.0.2', 'port':1111}
+host_orion={'ip':'10.77.19.241', 'port':'8080'}
+host_xml_server={'ip':'10.77.19.188', 'port':11111}
 
 
 bot = telebot.TeleBot(api_token)
@@ -49,6 +49,9 @@ def XMLRPC():
         
         mess=data['Comment']+'\n'+state+'\n'+'ADCReal: '+str(data['ADCReal'])+'\n'+'ADCValue: '+str(data['ADCValue'])+'\n'+'Value: '+str(data['Value'])
         bot.send_message(chat_id, mess)
+
+        print(mess)
+
         return('OK')
     
     OrionXMLRPCServer= SimpleXMLRPCServer((host_xml_server['ip'], host_xml_server['port']), requestHandler=RequestHandler)
@@ -60,6 +63,7 @@ def Telegram():
     @bot.message_handler(content_types=['text'])
     def get_text_messages(message):
         addr = message.text.split()
+        #addr = message.split()
 
         dev=s.GetDeviceList()
 
@@ -67,12 +71,14 @@ def Telegram():
         #addr=[15,0,4,4]
         id=0
         for comPort in dev['ComPortList']:                                    #Порт
-            if comPort['ComPort']==int(addr[0]):                             
-                for devList in comPort['DeviceList']:
-                    if devList['DeviceAddress']==int(addr[2]):                #Устройство
-                        for ShleifList in devList['ShleifList']:
-                            if ShleifList['Address'] ==int(addr[3]):          #Шлейф
-                                id=ShleifList['ID']
+            if comPort['ComPort']==int(addr[0]):   
+                for MdevList in comPort['DeviceList']:
+                    if MdevList['DeviceAddress']==int(addr[1]):                #Пульт
+                        for devList in MdevList['DeviceList']:
+                            if devList['DeviceAddress']==int(addr[2]):         #Устройство
+                                for ShleifList in devList['ShleifList']:
+                                    if ShleifList['Address'] ==int(addr[3]):    #Шлейф
+                                        id=ShleifList['ID']
 
         
         if id ==0:
@@ -83,16 +89,25 @@ def Telegram():
 
         
     bot.polling(none_stop=True, interval=0)
+    #get_text_messages('17 1 12 5')
+
 
 if __name__ == '__main__':
 
-    th_XMLRPC = Thread(target=XMLRPC)
-    th_XMLRPC.daemon=True
-    th_XMLRPC.start()
+    # th_XMLRPC = Thread(target=XMLRPC)
+    # th_XMLRPC.daemon=True
+    # th_XMLRPC.start()
 
-    th_Telegram = Thread(target=Telegram)
-    th_Telegram.daemon=True
-    th_Telegram.start()
+    # th_Telegram = Thread(target=Telegram)
+    # th_Telegram.daemon=True
+    # th_Telegram.start()
+    Telegram()
+
+
+
+
+
+
 
     while input()!='q':
         time.sleep(1)
