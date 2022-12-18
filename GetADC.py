@@ -8,14 +8,14 @@ from xmlrpc.server import SimpleXMLRPCRequestHandler
 import xmlrpc.client
 
 
-from telebot import apihelper
-apihelper.proxy = {'http':'http://proxy.azot.kmr:3128'}
-apihelper.API_URL = "http://46.181.26.73/bot{0}/{1}"
+# from telebot import apihelper
+# apihelper.proxy = {'http':'http://proxy.azot.kmr:3128'}
+# apihelper.API_URL = "http://46.181.26.73/bot{0}/{1}"
 
 api_token = '5820420595:AAEkPAGtRi-GED2eh4uPoSv8mCzkwaY1_Ks'
 chat_id   = '318983573'
-host_orion={'ip':'10.77.19.241', 'port':'8080'}
-host_xml_server={'ip':'10.77.19.188', 'port':11111}
+host_orion={'ip':'192.168.0.2', 'port':'8080'}
+host_xml_server={'ip':'192.168.0.2', 'port':11111}
 
 
 bot = telebot.TeleBot(api_token)
@@ -68,12 +68,17 @@ def Telegram():
         dev=s.GetDeviceList()
 
         #Получение ID по Адресу
-        #addr=[15,0,4,4]
+        addr=[15,0,4,4]
         id=0
         for comPort in dev['ComPortList']:                                    #Порт
-            if comPort['ComPort']==int(addr[0]):   
+            if comPort['ComPort']==int(addr[0]): 
                 for MdevList in comPort['DeviceList']:
-                    if MdevList['DeviceAddress']==int(addr[1]):                #Пульт
+                    M=False
+                    if MdevList['DeviceType']==0:
+                        M=True
+                    if (not M) or MdevList['DeviceAddress']==int(addr[1]):                #Пульт
+                        if not M:
+                            MdevList=comPort
                         for devList in MdevList['DeviceList']:
                             if devList['DeviceAddress']==int(addr[2]):         #Устройство
                                 for ShleifList in devList['ShleifList']:
@@ -94,20 +99,14 @@ def Telegram():
 
 if __name__ == '__main__':
 
-    # th_XMLRPC = Thread(target=XMLRPC)
-    # th_XMLRPC.daemon=True
-    # th_XMLRPC.start()
+    th_XMLRPC = Thread(target=XMLRPC)
+    th_XMLRPC.daemon=True
+    th_XMLRPC.start()
 
-    # th_Telegram = Thread(target=Telegram)
-    # th_Telegram.daemon=True
-    # th_Telegram.start()
-    Telegram()
-
-
-
-
-
-
+    th_Telegram = Thread(target=Telegram)
+    th_Telegram.daemon=True
+    th_Telegram.start()
+    #Telegram()
 
     while input()!='q':
         time.sleep(1)
